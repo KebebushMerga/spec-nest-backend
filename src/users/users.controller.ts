@@ -1,50 +1,28 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  NotFoundException,
-} from '@nestjs/common';
-
+import { Controller, Get, Delete, Param, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtGuard } from 'src/auth/jwt.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  @Post()
-  async create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  @UseGuards(JwtGuard)
+  @Get('profile')
+  getProfile(@Req() req) {
+    return this.usersService.findOne(req.user.sub);
   }
 
-  @Get()
-  async findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const user = await this.usersService.findOne(Number(id));
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return user;
-  }
-
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(Number(id), dto);
-  }
-
+  @UseGuards(JwtGuard, new RolesGuard('admin'))
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.usersService.remove(Number(id));
+  async deleteUser(@Param('id') id: string) {
+    await this.usersService.remove(+id);
+    return { message: 'User deleted successfully' };
+  }
+
+  @UseGuards(JwtGuard)
+  @Get()
+  findAll() {
+    return this.usersService.findAll();
   }
 }

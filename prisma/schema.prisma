@@ -5,16 +5,18 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
- provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
- provider = "sqlite"
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
- id        Int      @id @default(autoincrement())
- name      String
- email     String   @unique
- createdAt DateTime @default(now())
+  id       Int     @id @default(autoincrement())
+  name     String
+  email    String  @unique
+  password String
+  role     String  @default("user")
 }
